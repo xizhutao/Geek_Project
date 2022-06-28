@@ -1,9 +1,26 @@
-import { Card, Button, Checkbox, Form, Input } from 'antd'
+import { Card, Button, Checkbox, Form, Input, message } from 'antd'
 import Logo from '../../assets/logo.png'
+// 导入action
+import { login } from '@/store/Actions'
+import { useDispatch } from 'react-redux'
+import { useHistory } from 'react-router-dom'
 import './index.scss'
 export default function Login() {
-  const onFinish = (value) => {
-    console.log(value)
+  const dispatch = useDispatch()
+  const history = useHistory()
+  // 监听表单提交
+  const onFinish = (values) => {
+    dispatch(
+      login({
+        mobile: values.mobile,
+        code: values.code,
+      })
+    )
+    // 提示登录成功
+    message.success('登录成功', 1, () => {
+      // 手动路由跳转
+      history.replace('/home')
+    })
   }
   return (
     <div className="login-wrapper">
@@ -16,13 +33,13 @@ export default function Login() {
           autoComplete="off"
           onFinish={onFinish}
           initialValues={{
-            username: '13911111111',
-            password: '246810',
+            mobile: '13911111111',
+            code: '246810',
             remember: true,
           }}
         >
           <Form.Item
-            name="username"
+            name="mobile"
             rules={[
               { required: true, message: '请输入手机号' },
               {
@@ -34,7 +51,7 @@ export default function Login() {
             <Input maxLength={11} placeholder={'请输入手机号'} />
           </Form.Item>
           <Form.Item
-            name="password"
+            name="code"
             rules={[
               {
                 required: true,
