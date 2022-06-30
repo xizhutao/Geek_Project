@@ -4,7 +4,7 @@ import Logo from '../../assets/logo.png'
 import { login } from '@/store/Actions'
 import { useDispatch } from 'react-redux'
 import { useHistory, useLocation } from 'react-router-dom'
-import './index.scss'
+import styles from './index.module.scss'
 export default function Login() {
   const dispatch = useDispatch()
   const history = useHistory()
@@ -20,9 +20,8 @@ export default function Login() {
       )
       // 提示登录成功
       message.success('登录成功', 1, () => {
-        console.log(location)
         // 手动路由跳转
-        history.replace(location.state?.from ?? '/home')
+        history.replace(location.state?.from ?? '/home/dashboard')
       })
     } catch (err) {
       if (!err.response) {
@@ -33,7 +32,7 @@ export default function Login() {
     }
   }
   return (
-    <div className="login-wrapper">
+    <div className={styles.root}>
       <Card className="login" bodyStyle={{ padding: 20 }}>
         <img className="logoImg" src={Logo} alt="" />
         {/* 表单 */}

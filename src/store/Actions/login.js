@@ -1,5 +1,5 @@
 import { request, setToken } from '@/utils'
-// 创建异步的action发ajax请求
+// 分发异步的action发ajax请求
 export const login = (Logindata) => {
     return async (dispatch) => {
         const res = await request.post('/authorizations', Logindata)

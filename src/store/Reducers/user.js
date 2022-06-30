@@ -1,11 +1,13 @@
-import { getToken } from '@/utils/token'
-const initState = getToken() || ''
-const userlogin = (preState = initState, action) => {
+/**
+ * 获取用户信息
+ */
+const initState = {}
+const getUserInfo = (preState = initState, action) => {
     switch (action.type) {
-        case 'login/setToken':
+        case 'geek/getUserInfo':
             return action.payload
         default:
             return preState
     }
 }
-export default userlogin
+export default getUserInfo
