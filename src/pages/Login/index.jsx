@@ -3,24 +3,34 @@ import Logo from '../../assets/logo.png'
 // 导入action
 import { login } from '@/store/Actions'
 import { useDispatch } from 'react-redux'
-import { useHistory } from 'react-router-dom'
+import { useHistory, useLocation } from 'react-router-dom'
 import './index.scss'
 export default function Login() {
   const dispatch = useDispatch()
   const history = useHistory()
+  const location = useLocation()
   // 监听表单提交
-  const onFinish = (values) => {
-    dispatch(
-      login({
-        mobile: values.mobile,
-        code: values.code,
+  const onFinish = async (values) => {
+    try {
+      await dispatch(
+        login({
+          mobile: values.mobile,
+          code: values.code,
+        })
+      )
+      // 提示登录成功
+      message.success('登录成功', 1, () => {
+        console.log(location)
+        // 手动路由跳转
+        history.replace(location.state?.from ?? '/home')
       })
-    )
-    // 提示登录成功
-    message.success('登录成功', 1, () => {
-      // 手动路由跳转
-      history.replace('/home')
-    })
+    } catch (err) {
+      if (!err.response) {
+        message.warning('网络繁忙，请稍后再试')
+      } else {
+        message.warning(err.response?.data?.message)
+      }
+    }
   }
   return (
     <div className="login-wrapper">
