@@ -24,10 +24,10 @@ request.interceptors.request.use(function (config) {
 });
 // 响应拦截器
 request.interceptors.response.use(undefined, function (error) {
-    if (!error.response) {
-        message.error('网络超时，请稍后再试')
-        return Promise.reject(error)
-    }
+    // if (!error.response) {
+    //     message.error('网络超时，请稍后再试')
+    //     return Promise.reject(error)
+    // }
     if (error.response.status === 401) {
         message.error('登录超时请重新登录', 1.5, () => {
             customHistory.replace('/login', {

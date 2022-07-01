@@ -1,0 +1,8 @@
+.root {
+    padding: 24px;
+    :global{
+       .ant-select-in-form-item{
+            width: 288px !important;
+        }
+    }
+  }

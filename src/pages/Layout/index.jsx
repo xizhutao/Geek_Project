@@ -11,8 +11,8 @@ import {
   Link,
   Redirect,
   Route,
-  useLocation,
   useHistory,
+  useLocation,
 } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
@@ -22,11 +22,11 @@ import Article from '../Article'
 import { getUserInfo, logout } from '@/store/Actions'
 const { Header, Sider, Content } = Layout
 const GeekLayout = () => {
-  const location = useLocation()
   const dispatch = useDispatch()
   const history = useHistory()
+  const location = useLocation()
+  const defaultSelectedKeys = location.pathname
   //   刷新时获取路由的路径
-  const selectHigthLigthMatch = location.pathname
   //   分发异步action请求用户信息
   useEffect(() => {
     dispatch(getUserInfo())
@@ -63,7 +63,7 @@ const GeekLayout = () => {
       <Sider width={148}>
         <div className="logo">GEEK</div>
         <Menu
-          defaultSelectedKeys={[selectHigthLigthMatch]}
+          defaultSelectedKeys={[defaultSelectedKeys]}
           mode="inline"
           theme="dark"
           items={items}
@@ -102,7 +102,6 @@ const GeekLayout = () => {
           <Route path="/home/dashboard" component={DashBoard}></Route>
           <Route path="/home/publish" component={Publish}></Route>
           <Route path="/home/article" component={Article}></Route>
-          <Redirect to="/home/dashboard"></Redirect>
         </Content>
       </Layout>
     </Layout>
