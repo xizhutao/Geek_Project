@@ -7,18 +7,24 @@ import {
   LogoutOutlined,
 } from '@ant-design/icons'
 import React from 'react'
-import { Link, Redirect, Route, useLocation } from 'react-router-dom'
+import {
+  Link,
+  Redirect,
+  Route,
+  useLocation,
+  useHistory,
+} from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect } from 'react'
 import DashBoard from '../DashBoard'
 import Publish from '../Publish'
 import Article from '../Article'
-import { getUserInfo } from '@/store/Actions'
+import { getUserInfo, logout } from '@/store/Actions'
 const { Header, Sider, Content } = Layout
 const GeekLayout = () => {
   const location = useLocation()
   const dispatch = useDispatch()
-
+  const history = useHistory()
   //   刷新时获取路由的路径
   const selectHigthLigthMatch = location.pathname
   //   分发异步action请求用户信息
@@ -27,6 +33,13 @@ const GeekLayout = () => {
   }, [dispatch])
   //   调用hook从状态树上取用户信息
   const user = useSelector((state) => state.userInfo)
+  //   用户退出
+  const onLogout = () => {
+    // 分发用户退出的acton
+    dispatch(logout())
+    // 手动路由跳转到登录页面
+    history.push('/login')
+  }
   const items = [
     {
       label: <Link to="/home/dashboard">数据面板</Link>,
@@ -71,6 +84,7 @@ const GeekLayout = () => {
               title="您确认退出极客园自媒体端吗？"
               okText="确认"
               cancelText="取消"
+              onConfirm={onLogout}
             >
               <Button type="link" icon={<LogoutOutlined />}>
                 退出

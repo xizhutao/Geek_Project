@@ -1,11 +1,12 @@
 import Login from './pages/Login'
 import Layout from '@/pages/Layout'
-import { BrowserRouter, Route, Redirect, Switch } from 'react-router-dom'
+import { Router, Route, Redirect, Switch } from 'react-router-dom'
 import { AuthRoute } from '@/pages/AuthRoute'
+import { customHistory } from '@/utils/history'
 import './App.scss'
 export default function App() {
   return (
-    <BrowserRouter>
+    <Router history={customHistory}>
       <div className="App">
         <Switch>
           <Route path="/login" component={Login} />
@@ -14,6 +15,6 @@ export default function App() {
           <Redirect path="/" to="/login" />
         </Switch>
       </div>
-    </BrowserRouter>
+    </Router>
   )
 }

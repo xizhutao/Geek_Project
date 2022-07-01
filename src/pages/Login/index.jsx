@@ -21,6 +21,7 @@ export default function Login() {
       // 提示登录成功
       message.success('登录成功', 1, () => {
         // 手动路由跳转
+        console.log(location)
         history.replace(location.state?.from ?? '/home/dashboard')
       })
     } catch (err) {
