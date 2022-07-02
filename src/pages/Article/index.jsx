@@ -8,25 +8,38 @@ import {
   Radio,
   Table,
   Space,
+  Tag,
 } from 'antd'
 import { Link } from 'react-router-dom'
 import styles from './index.module.scss'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
-// 国际化配置
-import 'moment/locale/zh-cn'
-import locale from 'antd/es/date-picker/locale/zh_CN'
 import img404 from '@/assets/error.png'
+import { useDispatch, useSelector } from 'react-redux'
+import { getAticleChannels, getArticleList } from '@/store/Actions'
 const { RangePicker } = DatePicker
 const { Option } = Select
-
-const handleChange = (value) => {
-  console.log(`selected ${value}`)
-}
 const Article = () => {
+  //  优化标签状态的判断
+  const articleState = {
+    0: { color: '#ccc', text: '草稿' },
+    1: { color: 'yellow', text: '待审核' },
+    2: { color: 'green', text: '审核通过' },
+    3: { color: 'red', text: '审核失败' },
+  }
+  const dispatch = useDispatch()
+  // 获取文章频道列表、文章列表
+  useEffect(() => {
+    dispatch(getAticleChannels())
+    dispatch(getArticleList({}))
+  }, [dispatch])
+  // 从redux上拿文章的数据
+  const { channels, count, list, pageSize, page } = useSelector(
+    (state) => state.article
+  )
+
   const [value, setValue] = useState(1)
   const onChange = (e) => {
-    console.log('radio checked', e.target.value)
     setValue(e.target.value)
   }
   // 表格数据源
@@ -35,9 +48,16 @@ const Article = () => {
       title: '封面',
       dataIndex: 'cover',
       key: 'cover',
-      render: (cover) => (
-        <img src={cover || img404} width={200} height={150} alt="" />
-      ),
+      render: (cover) => {
+        return (
+          <img
+            src={cover.images[0] ?? img404}
+            width={200}
+            height={150}
+            alt=""
+          />
+        )
+      },
     },
     {
       title: '标题',
@@ -48,7 +68,20 @@ const Article = () => {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
-      render: () => '自定义状态',
+      render: (data) => {
+        // if (data === 0) {
+        //   return <Tag color="yellow">草稿</Tag>
+        // } else if (data === 1) {
+        //   return <Tag color="#ccc">待审核</Tag>
+        // } else if (data === 2) {
+        //   return <Tag color="green">审核通过</Tag>
+        // } else if (data === 3) {
+        //   return <Tag color="red">审核失败</Tag>
+        // }
+        // 优化判断
+        const tags = articleState[data]
+        return <Tag color={tags.color}>{tags.text}</Tag>
+      },
     },
     {
       title: '发布时间',
@@ -81,18 +114,36 @@ const Article = () => {
       ),
     },
   ]
-  const data = [
-    {
-      id: '8218',
-      coment_count: 0,
-      cover: 'http://geek.itheima.net/resources/images/15.jpg',
-      like_count: 0,
-      pubdate: '2019-03-11 09:00:00',
-      read_count: 2,
-      status: 2,
-      title: 'webview离线化加载h5资源解决方案',
-    },
-  ]
+  // 筛选数据功能
+  const onFinish = (values) => {
+    console.log(values)
+    const params = {}
+    const { channel_id, dateArr, status } = values
+    // 判断状态
+    if (status !== undefined) {
+      params.status = status
+    }
+    // 判断id
+    if (channel_id !== undefined) {
+      params.channel_id = channel_id
+    }
+    // 判断日期
+    if (dateArr !== undefined && dateArr !== null) {
+      params.begin_pubdate = dateArr[0].format('YYYY-MM-DD HH:mm:ss')
+      params.end_pubdate = dateArr[1].format('YYYY-MM-DD HH:mm:ss')
+      console.log(params)
+    }
+    // 分发action获取文章列表
+    dispatch(getArticleList(params))
+  }
+  // 底部分页的功能
+  const handlepageChang = (page, pageSize) => {
+    const params = {
+      page,
+      per_page: pageSize,
+    }
+    dispatch(getArticleList(params))
+  }
   return (
     <div className={styles.root}>
       <Card
@@ -107,37 +158,48 @@ const Article = () => {
         }
       >
         {/* 表单 */}
-        <Form>
-          <Form.Item label="状态：">
+        <Form onFinish={onFinish}>
+          <Form.Item label="状态：" name="status">
             <Radio.Group onChange={onChange} value={value}>
-              <Radio value={1}>全部</Radio>
-              <Radio value={2}>草稿</Radio>
-              <Radio value={3}>待审核</Radio>
-              <Radio value={4}>已通过</Radio>
-              <Radio value={5}>已拒绝</Radio>
+              <Radio value={undefined}>全部</Radio>
+              <Radio value={0}>草稿</Radio>
+              <Radio value={1}>待审核</Radio>
+              <Radio value={2}>审核通过</Radio>
+              <Radio value={3}>审核失败</Radio>
             </Radio.Group>
           </Form.Item>
-          <Form.Item label="频道：">
-            <Select
-              style={{ width: 120 }}
-              onChange={handleChange}
-              placeholder="请选择所属频道"
-            >
-              <Option value="jack">Jack</Option>
-              <Option value="lucy">Lucy</Option>
-              <Option value="Yiminghe">yiminghe</Option>
+          <Form.Item label="频道：" name="channel_id">
+            <Select style={{ width: 120 }} placeholder="请选择所属频道">
+              {channels.map((item) => (
+                <Option key={item.id} value={item.id}>
+                  {item.name}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
-          <Form.Item label="日期：">
-            <RangePicker locale={locale} />
+          <Form.Item label="日期：" name="dateArr">
+            <RangePicker />
           </Form.Item>
           <Form.Item>
-            <Button type="primary">筛选</Button>
+            <Button type="primary" htmlType="submit">
+              筛选
+            </Button>
           </Form.Item>
         </Form>
       </Card>
-      <Card title="根据筛选条件共查询到 5029 条结果：">
-        <Table columns={columns} dataSource={data} rowKey="id" />
+      <Card title={`根据筛选条件共查询到 ${count} 条结果：`}>
+        <Table
+          columns={columns}
+          dataSource={list}
+          rowKey="id"
+          pagination={{
+            current: page,
+            pageSize,
+            showSizeChanger: true,
+            total: count,
+            onChange: handlepageChang,
+          }}
+        />
       </Card>
     </div>
   )
