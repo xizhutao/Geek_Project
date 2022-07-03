@@ -8,34 +8,66 @@ import {
   Radio,
   Upload,
   Modal,
+  message,
 } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import { getAticleChannels } from '@/store/Actions/article'
 import { useDispatch } from 'react-redux'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useEffect } from 'react'
+import { Link, useHistory } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
 import styles from './index.module.scss'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import Channel from '@/components/Channel'
+import { publishArticle } from '@/store/Actions/publish'
+
 // 上传图片框
 const getBase64 = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.readAsDataURL(file)
-
     reader.onload = () => resolve(reader.result)
-
     reader.onerror = (error) => reject(error)
   })
 // 组件
 const Publish = () => {
-  const [value, setValue] = useState(1)
+  const history = useHistory()
+  // 监听表单提交事件
+  const onFinish = async (values) => {
+    const { type, ...rest } = values
+    const imgUrlArr = fileList.map((item) => {
+      return item.response.data.url
+    })
+    const body = {
+      ...rest,
+      cover: {
+        type,
+        images: imgUrlArr,
+      },
+    }
+    // 调度一个发表文章的action
+    await dispatch(publishArticle(body))
+    message.success('发表文章成功', 1, () => {
+      history.push('/home/article')
+    })
+  }
+  // 监听radio按钮的变化
   const onChange = (e) => {
     console.log('radio checked', e.target.value)
-    setValue(e.target.value)
+    if (e.target.value === 1) {
+      const newFile = fileListRef.current[0] ? [fileListRef.current[0]] : []
+      setFileList(newFile)
+    } else if (e.target.value === 3) {
+      const newFileList = fileListRef.current
+      setFileList(newFileList)
+    }
+    setMaxCount(e.target.value)
   }
+  // 创建一个ref仓库用来存储上传文件的数量
+  const fileListRef = useRef([])
+  // 创建一个控制上传图片数量的状态
+  const [maxCount, setMaxCount] = useState(1)
   // 上传图片
   const [previewVisible, setPreviewVisible] = useState(false)
   const [previewImage, setPreviewImage] = useState('')
@@ -54,7 +86,7 @@ const Publish = () => {
     )
   }
   const handleChange = (filelist) => {
-    console.log(filelist)
+    fileListRef.current = filelist.fileList
     return setFileList(filelist.fileList)
   }
   const uploadButton = (
@@ -93,6 +125,7 @@ const Publish = () => {
           labelCol={{ span: 4 }}
           wrapperCol={{ span: 16 }}
           initialValues={{ content: '' }}
+          onFinish={onFinish}
         >
           <Form.Item label="文章标题：" name="title">
             <Input placeholder="请输入文章标题" style={{ width: 400 }} />
@@ -102,24 +135,33 @@ const Publish = () => {
           </Form.Item>
           {/* 文章封面 */}
           <Form.Item label="文章封面：">
-            <Radio.Group onChange={onChange} value={value}>
-              <Radio value={1}>单图</Radio>
-              <Radio value={2}>三图</Radio>
-              <Radio value={3}>无图</Radio>
-            </Radio.Group>
+            <Form.Item name="type">
+              <Radio.Group onChange={onChange} value={maxCount}>
+                <Radio value={1}>单图</Radio>
+                <Radio value={3}>三图</Radio>
+                <Radio value={2}>无图</Radio>
+              </Radio.Group>
+            </Form.Item>
+
             {/* 上传图片 */}
-            <Upload
-              // 向后台提交的参数
-              name="image"
-              action="http://geek.itheima.net/v1_0/upload"
-              listType="picture-card"
-              onPreview={handlePreview}
-              // 提交的文件的列表
-              fileList={fileList}
-              onChange={handleChange}
-            >
-              {fileList.length >= 8 ? null : uploadButton}
-            </Upload>
+            {maxCount !== 2 ? (
+              <Upload
+                // 向后台提交的参数
+                name="image"
+                action="http://geek.itheima.net/v1_0/upload"
+                listType="picture-card"
+                onPreview={handlePreview}
+                multiple={maxCount === 3}
+                maxCount={maxCount}
+                // 提交的文件的列表
+                fileList={fileList}
+                onChange={handleChange}
+              >
+                {fileList.length >= 8 ? null : uploadButton}
+              </Upload>
+            ) : (
+              ''
+            )}
             <Modal
               visible={previewVisible}
               title={previewTitle}
@@ -142,7 +184,9 @@ const Publish = () => {
           {/* 发表文章 */}
           <Form.Item wrapperCol={{ offset: 4 }}>
             <Space>
-              <Button type="primary">发表文章</Button>
+              <Button htmlType="submit" type="primary">
+                发表文章
+              </Button>
             </Space>
           </Form.Item>
         </Form>
