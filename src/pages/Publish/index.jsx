@@ -20,7 +20,7 @@ import styles from './index.module.scss'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import Channel from '@/components/Channel'
-import { publishArticle } from '@/store/Actions/publish'
+import { publishArticle, SaveDraft } from '@/store/Actions/publish'
 
 // 上传图片框
 const getBase64 = (file) =>
@@ -47,10 +47,38 @@ const Publish = () => {
       },
     }
     // 调度一个发表文章的action
-    await dispatch(publishArticle(body))
-    message.success('发表文章成功', 1, () => {
-      history.push('/home/article')
+    try {
+      await dispatch(publishArticle(body))
+      message.success('发表文章成功', 1, () => {
+        history.push('/home/article')
+      })
+    } catch {}
+  }
+  // 创建form表单实例
+  const [form] = Form.useForm()
+  // 监听存入草稿事件
+  const saveDraft = async () => {
+    // 获取表单中的数据
+    const res = await form.validateFields()
+    // 对拿到的表单中的数据进行处理
+    const { type, ...rest } = res
+    const imgUrlArr = fileList.map((item) => {
+      return item.response.data.url
     })
+    const body = {
+      ...rest,
+      cover: {
+        type,
+        images: imgUrlArr,
+      },
+    }
+    // 调度存入草稿的action
+    try {
+      await dispatch(SaveDraft(body))
+      message.success('存入草稿成功', 1, () => {
+        history.push('/home/article')
+      })
+    } catch {}
   }
   // 监听radio按钮的变化
   const onChange = (e) => {
@@ -85,6 +113,7 @@ const Publish = () => {
       file.name || file.url.substring(file.url.lastIndexOf('/') + 1)
     )
   }
+  // 监听上传文件事件
   const handleChange = (filelist) => {
     fileListRef.current = filelist.fileList
     return setFileList(filelist.fileList)
@@ -126,6 +155,7 @@ const Publish = () => {
           wrapperCol={{ span: 16 }}
           initialValues={{ content: '' }}
           onFinish={onFinish}
+          form={form}
         >
           <Form.Item label="文章标题：" name="title">
             <Input placeholder="请输入文章标题" style={{ width: 400 }} />
@@ -187,6 +217,7 @@ const Publish = () => {
               <Button htmlType="submit" type="primary">
                 发表文章
               </Button>
+              <Button onClick={saveDraft}>存入草稿</Button>
             </Space>
           </Form.Item>
         </Form>
