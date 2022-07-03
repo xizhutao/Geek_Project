@@ -4,7 +4,6 @@ import {
   Card,
   Breadcrumb,
   DatePicker,
-  Select,
   Radio,
   Table,
   Space,
@@ -21,13 +20,9 @@ import {
 } from '@ant-design/icons'
 import img404 from '@/assets/error.png'
 import { useDispatch, useSelector } from 'react-redux'
-import {
-  getAticleChannels,
-  getArticleList,
-  deleteArticle,
-} from '@/store/Actions'
+import { getArticleList, deleteArticle } from '@/store/Actions'
+import Channel from '@/components/Channel'
 const { RangePicker } = DatePicker
-const { Option } = Select
 const { confirm } = Modal
 const Article = () => {
   const history = useHistory()
@@ -43,13 +38,10 @@ const Article = () => {
   const dispatch = useDispatch()
   // 获取文章频道列表、文章列表
   useEffect(() => {
-    dispatch(getAticleChannels())
     dispatch(getArticleList({}))
   }, [dispatch])
   // 从redux上拿文章的数据
-  const { channels, count, list, pageSize, page } = useSelector(
-    (state) => state.article
-  )
+  const { count, list, pageSize, page } = useSelector((state) => state.article)
 
   const [value, setValue] = useState(1)
   const onChange = (e) => {
@@ -198,7 +190,7 @@ const Article = () => {
         }
       >
         {/* 表单 */}
-        <Form onFinish={onFinish}>
+        <Form onFinish={onFinish} initialValues={{ channel_id: 1 }}>
           <Form.Item label="状态：" name="status">
             <Radio.Group onChange={onChange} value={value}>
               <Radio value={undefined}>全部</Radio>
@@ -209,13 +201,8 @@ const Article = () => {
             </Radio.Group>
           </Form.Item>
           <Form.Item label="频道：" name="channel_id">
-            <Select style={{ width: 120 }} placeholder="请选择所属频道">
-              {channels.map((item) => (
-                <Option key={item.id} value={item.id}>
-                  {item.name}
-                </Option>
-              ))}
-            </Select>
+            {/* 自定的组件 */}
+            <Channel width={288} />
           </Form.Item>
           <Form.Item label="日期：" name="dateArr">
             <RangePicker />
