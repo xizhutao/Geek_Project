@@ -11,7 +11,7 @@ import {
   Tag,
   Modal,
 } from 'antd'
-import { Link } from 'react-router-dom'
+import { Link, useHistory } from 'react-router-dom'
 import styles from './index.module.scss'
 import { useEffect, useState, useRef } from 'react'
 import {
@@ -30,6 +30,7 @@ const { RangePicker } = DatePicker
 const { Option } = Select
 const { confirm } = Modal
 const Article = () => {
+  const history = useHistory()
   // 使用useRef存数据
   const paramsRef = useRef({})
   //  优化标签状态的判断
@@ -121,7 +122,11 @@ const Article = () => {
       render: (data) => {
         return (
           <Space size="middle">
-            <Button type="link" icon={<EditOutlined />} />
+            <Button
+              type="link"
+              onClick={() => history.push(`/home/publish/${data.id}`)}
+              icon={<EditOutlined />}
+            />
             <Button
               type="link"
               onClick={() => onDeleteArticle(data.id)}
@@ -186,7 +191,7 @@ const Article = () => {
           // 面包屑
           <Breadcrumb>
             <Breadcrumb.Item>
-              <Link to="/">首页</Link>
+              <Link to="/home">首页</Link>
             </Breadcrumb.Item>
             <Breadcrumb.Item>内容管理</Breadcrumb.Item>
           </Breadcrumb>

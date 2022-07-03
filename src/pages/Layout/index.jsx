@@ -25,7 +25,9 @@ const GeekLayout = () => {
   const dispatch = useDispatch()
   const history = useHistory()
   const location = useLocation()
-  const defaultSelectedKeys = location.pathname
+  const defaultSelectedKeys = location.pathname.startsWith('/home/publish')
+    ? '/home/publish'
+    : location.pathname
   //   刷新时获取路由的路径
   //   分发异步action请求用户信息
   useEffect(() => {
@@ -63,7 +65,7 @@ const GeekLayout = () => {
       <Sider width={148}>
         <div className="logo">GEEK</div>
         <Menu
-          defaultSelectedKeys={[defaultSelectedKeys]}
+          selectedKeys={[defaultSelectedKeys]}
           mode="inline"
           theme="dark"
           items={items}
@@ -100,7 +102,7 @@ const GeekLayout = () => {
             render={() => <Redirect to="/home/dashboard"></Redirect>}
           ></Route>
           <Route path="/home/dashboard" component={DashBoard}></Route>
-          <Route path="/home/publish" component={Publish}></Route>
+          <Route path="/home/publish/:id?" component={Publish}></Route>
           <Route path="/home/article" component={Article}></Route>
         </Content>
       </Layout>
