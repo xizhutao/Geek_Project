@@ -9,17 +9,29 @@ import {
   Table,
   Space,
   Tag,
+  Modal,
 } from 'antd'
 import { Link } from 'react-router-dom'
 import styles from './index.module.scss'
-import { useEffect, useState } from 'react'
-import { EditOutlined, DeleteOutlined } from '@ant-design/icons'
+import { useEffect, useState, useRef } from 'react'
+import {
+  EditOutlined,
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+} from '@ant-design/icons'
 import img404 from '@/assets/error.png'
 import { useDispatch, useSelector } from 'react-redux'
-import { getAticleChannels, getArticleList } from '@/store/Actions'
+import {
+  getAticleChannels,
+  getArticleList,
+  deleteArticle,
+} from '@/store/Actions'
 const { RangePicker } = DatePicker
 const { Option } = Select
+const { confirm } = Modal
 const Article = () => {
+  // 使用useRef存数据
+  const paramsRef = useRef({})
   //  优化标签状态的判断
   const articleState = {
     0: { color: '#ccc', text: '草稿' },
@@ -106,14 +118,21 @@ const Article = () => {
     {
       title: '操作',
       key: 'action',
-      render: () => (
-        <Space size="middle">
-          <Button type="link" icon={<EditOutlined />} />
-          <Button type="link" icon={<DeleteOutlined />} />
-        </Space>
-      ),
+      render: (data) => {
+        return (
+          <Space size="middle">
+            <Button type="link" icon={<EditOutlined />} />
+            <Button
+              type="link"
+              onClick={() => onDeleteArticle(data.id)}
+              icon={<DeleteOutlined />}
+            />
+          </Space>
+        )
+      },
     },
   ]
+
   // 筛选数据功能
   const onFinish = (values) => {
     console.log(values)
@@ -133,16 +152,32 @@ const Article = () => {
       params.end_pubdate = dateArr[1].format('YYYY-MM-DD HH:mm:ss')
       console.log(params)
     }
+    // 将定义好的params存到useRef中
+    paramsRef.current = params
     // 分发action获取文章列表
     dispatch(getArticleList(params))
   }
   // 底部分页的功能
   const handlepageChang = (page, pageSize) => {
     const params = {
+      ...paramsRef.current,
       page,
       per_page: pageSize,
     }
+    paramsRef.current = params
     dispatch(getArticleList(params))
+  }
+  // 删除文章
+  const onDeleteArticle = (id) => {
+    confirm({
+      title: '温馨提示',
+      icon: <ExclamationCircleOutlined />,
+      content: '文章将永久删除，请再次确认',
+      async onOk() {
+        await dispatch(deleteArticle(id))
+        await dispatch(getArticleList(paramsRef.current))
+      },
+    })
   }
   return (
     <div className={styles.root}>

@@ -9,7 +9,11 @@ export const getAticleChannels = () => {
         dispatch({ type: 'article/getAticleChannels', payload: channels })
     }
 }
-
+/**
+ * 获取文章列表
+ * @param {*} params 
+ * @returns 
+ */
 export const getArticleList = (params) => {
     return async (dispatch) => {
         const res = await request.get('/mp/articles', {
@@ -25,5 +29,10 @@ export const getArticleList = (params) => {
                 count
             }
         })
+    }
+}
+export const deleteArticle = (id) => {
+    return async () => {
+        await request.delete(`/mp/articles/${id}`)
     }
 }
