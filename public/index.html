@@ -8,5 +8,10 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- 加载第三发包的 CDN 链接 -->
+    <% htmlWebpackPlugin.options.cdn &&
+    htmlWebpackPlugin.options.cdn.js.forEach(cdnURL => { %>
+    <script src="<%= cdnURL %>"></script>
+    <% }) %>
   </body>
 </html>

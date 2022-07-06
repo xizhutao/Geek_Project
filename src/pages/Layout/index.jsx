@@ -1,4 +1,4 @@
-import { Layout, Menu, Popconfirm, Button } from 'antd'
+import { Layout, Menu, Popconfirm, Button, Spin } from 'antd'
 import styles from './index.module.scss'
 import {
   PieChartOutlined,
@@ -6,20 +6,23 @@ import {
   FileWordOutlined,
   LogoutOutlined,
 } from '@ant-design/icons'
-import React from 'react'
+import React, { Suspense } from 'react'
 import {
   Link,
   Redirect,
   Route,
+  Switch,
   useHistory,
   useLocation,
 } from 'react-router-dom'
 import { useDispatch, useSelector } from 'react-redux'
-import { useEffect } from 'react'
-import DashBoard from '../DashBoard'
-import Publish from '../Publish'
-import Article from '../Article'
+import { useEffect, lazy } from 'react'
 import { getUserInfo, logout } from '@/store/Actions'
+// 路由懒加载
+const DashBoard = lazy(() => import('../DashBoard'))
+const Publish = lazy(() => import('../Publish'))
+const Article = lazy(() => import('../Article'))
+const NotFound = lazy(() => import('@/pages/NotFound'))
 const { Header, Sider, Content } = Layout
 const GeekLayout = () => {
   const dispatch = useDispatch()
@@ -96,14 +99,21 @@ const GeekLayout = () => {
         </Header>
         {/* 内容区域 */}
         <Content>
-          <Route
-            path="/home"
-            exact
-            render={() => <Redirect to="/home/dashboard"></Redirect>}
-          ></Route>
-          <Route path="/home/dashboard" component={DashBoard}></Route>
-          <Route path="/home/publish/:id?" component={Publish}></Route>
-          <Route path="/home/article" component={Article}></Route>
+          <Suspense fallback={<Spin tip="加载中"></Spin>}>
+            <Switch>
+              <Route
+                path="/home"
+                exact
+                render={() => <Redirect to="/home/dashboard"></Redirect>}
+              ></Route>
+              <Route path="/home/dashboard" component={DashBoard}></Route>
+              <Route path="/home/publish/:id?" component={Publish}></Route>
+              <Route path="/home/article" component={Article}></Route>
+              <Route>
+                <NotFound></NotFound>
+              </Route>
+            </Switch>
+          </Suspense>
         </Content>
       </Layout>
     </Layout>
