@@ -2,3 +2,7 @@
 html, body, #root {
     height: 100%;
   }
+.ant-form.ant-form-horizontal .ant-form-item{
+    margin-bottom: 0;
+    min-height: 56px;
+}

@@ -5,5 +5,5 @@ import article from '@/store/Reducers/article'
 export default combineReducers({
     userlogin,
     userInfo,
-    article
+    article,
 })

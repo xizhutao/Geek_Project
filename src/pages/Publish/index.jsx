@@ -13,14 +13,13 @@ import {
 import { PlusOutlined } from '@ant-design/icons'
 import { getAticleChannels } from '@/store/Actions/article'
 import { useDispatch } from 'react-redux'
-import { useState } from 'react'
-import { Link, useHistory } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import { Link, useHistory, useParams } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
 import styles from './index.module.scss'
 import ReactQuill from 'react-quill'
 import 'react-quill/dist/quill.snow.css'
 import Channel from '@/components/Channel'
-import { publishArticle, SaveDraft } from '@/store/Actions/publish'
+import { getArticleById, saveArticle } from '@/store/Actions/publish'
 
 // 上传图片框
 const getBase64 = (file) =>
@@ -33,11 +32,58 @@ const getBase64 = (file) =>
 // 组件
 const Publish = () => {
   const history = useHistory()
-  // 监听表单提交事件
-  const onFinish = async (values) => {
+  const dispatch = useDispatch()
+  // 创建一个ref仓库用来存储上传文件的数量
+  const fileListRef = useRef([])
+  // 创建一个控制上传图片数量的状态
+  const [maxCount, setMaxCount] = useState(1)
+  // 创建一个控制上传图片的状态
+  const [fileList, setFileList] = useState([])
+  // 创建form表单实例
+  const [form] = Form.useForm()
+  // 获取路由携带参数
+  const params = useParams()
+  const isEdit = !!params.id
+  // 一进入组件就拿文章详情数据
+  useEffect(() => {
+    const agency = async () => {
+      if (!isEdit) return
+      // 调度一个通过id获取文章详情的action
+      const articledetail = await dispatch(getArticleById(params.id))
+      console.log(articledetail)
+      const {
+        channel_id,
+        content,
+        cover: { type, images },
+        title,
+      } = articledetail
+      // 调用form实例上的Api，向表单内填数据
+      form.setFieldsValue({
+        channel_id,
+        content,
+        type,
+        title,
+      })
+      // 回填图片的数据
+      const newImageList = images.map((item) => {
+        return { url: item }
+      })
+      setFileList(newImageList) //??????????????????????????????????????????????????????????????????????????????????????????????????????
+      // 控制数量
+      setMaxCount(type)
+      // 将图片列表存放到ref中
+      fileListRef.current = newImageList
+    }
+    agency()
+  }, [dispatch, params.id, isEdit, form])
+
+  // 封装发布和存入草稿函数
+  const resolveArticle = async (values, msg, isDraft) => {
+    if (values.type !== fileList.length)
+      return message.warning('上传图片数量不匹配')
     const { type, ...rest } = values
     const imgUrlArr = fileList.map((item) => {
-      return item.response.data.url
+      return item?.response?.data.url || item.url
     })
     const body = {
       ...rest,
@@ -46,67 +92,89 @@ const Publish = () => {
         images: imgUrlArr,
       },
     }
+    // 如果是编辑状态，将路由参数上的id值挂载到body身上
+    if (isEdit) {
+      body.id = params.id
+    }
     // 调度一个发表文章的action
-    try {
-      await dispatch(publishArticle(body))
-      message.success('发表文章成功', 1, () => {
-        history.push('/home/article')
-      })
-    } catch {}
+    await dispatch(saveArticle(isDraft, body, isEdit))
+    message.success(msg, 1, () => {
+      history.push('/home/article')
+    })
   }
-  // 创建form表单实例
-  const [form] = Form.useForm()
+  // 监听表单提交事件
+  const onFinish = async (values) => {
+    try {
+      resolveArticle(values, isEdit ? '编辑文章成功' : '发表文章成功', false)
+    } catch {}
+    // const { type, ...rest } = values
+    // const imgUrlArr = fileList.map((item) => {
+    //   return item.response.data.url
+    // })
+    // const body = {
+    //   ...rest,
+    //   cover: {
+    //     type,
+    //     images: imgUrlArr,
+    //   },
+    // }
+    // // 调度一个发表文章的action
+    // try {
+    //   await dispatch(publishArticle(body))
+    //   message.success('发表文章成功', 1, () => {
+    //     history.push('/home/article')
+    //   })
+    // } catch {}
+  }
+
   // 监听存入草稿事件
   const saveDraft = async () => {
     // 获取表单中的数据
-    const res = await form.validateFields()
+    const values = await form.validateFields()
+    resolveArticle(values, '存入草稿成功', true)
     // 对拿到的表单中的数据进行处理
-    const { type, ...rest } = res
-    const imgUrlArr = fileList.map((item) => {
-      return item.response.data.url
-    })
-    const body = {
-      ...rest,
-      cover: {
-        type,
-        images: imgUrlArr,
-      },
-    }
-    // 调度存入草稿的action
-    try {
-      await dispatch(SaveDraft(body))
-      message.success('存入草稿成功', 1, () => {
-        history.push('/home/article')
-      })
-    } catch {}
+    // const { type, ...rest } = res
+    // const imgUrlArr = fileList.map((item) => {
+    //   return item.response.data.url
+    // })
+    // const body = {
+    //   ...rest,
+    //   cover: {
+    //     type,
+    //     images: imgUrlArr,
+    //   },
+    // }
+    // // 调度存入草稿的action
+    // try {
+    //   await dispatch(SaveDraft(body))
+    //   message.success('存入草稿成功', 1, () => {
+    //     history.push('/home/article')
+    //   })
+    // } catch {}
   }
   // 监听radio按钮的变化
   const onChange = (e) => {
     console.log('radio checked', e.target.value)
     if (e.target.value === 1) {
       const newFile = fileListRef.current[0] ? [fileListRef.current[0]] : []
+      console.log('newFile', newFile)
       setFileList(newFile)
     } else if (e.target.value === 3) {
       const newFileList = fileListRef.current
+      console.log(newFileList)
       setFileList(newFileList)
     }
     setMaxCount(e.target.value)
   }
-  // 创建一个ref仓库用来存储上传文件的数量
-  const fileListRef = useRef([])
-  // 创建一个控制上传图片数量的状态
-  const [maxCount, setMaxCount] = useState(1)
   // 上传图片
   const [previewVisible, setPreviewVisible] = useState(false)
   const [previewImage, setPreviewImage] = useState('')
   const [previewTitle, setPreviewTitle] = useState('')
-  const [fileList, setFileList] = useState([])
   const handleCancel = () => setPreviewVisible(false)
   const handlePreview = async (file) => {
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj)
     }
-
     setPreviewImage(file.url || file.preview)
     setPreviewVisible(true)
     setPreviewTitle(
@@ -131,7 +199,6 @@ const Publish = () => {
     </div>
   )
   // 频道数据
-  const dispatch = useDispatch()
   useEffect(() => {
     dispatch(getAticleChannels())
   }, [dispatch])
@@ -146,7 +213,9 @@ const Publish = () => {
             <Breadcrumb.Item>
               <Link to="/article">内容管理</Link>
             </Breadcrumb.Item>
-            <Breadcrumb.Item>发布文章</Breadcrumb.Item>
+            <Breadcrumb.Item>
+              {isEdit ? '编辑文章' : '发布文章'}
+            </Breadcrumb.Item>
           </Breadcrumb>
         }
       >
@@ -215,7 +284,7 @@ const Publish = () => {
           <Form.Item wrapperCol={{ offset: 4 }}>
             <Space>
               <Button htmlType="submit" type="primary">
-                发表文章
+                {isEdit ? '编辑文章' : '发布文章'}
               </Button>
               <Button onClick={saveDraft}>存入草稿</Button>
             </Space>
