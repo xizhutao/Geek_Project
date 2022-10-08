@@ -11,6 +11,8 @@ export default function Login() {
   const history = useHistory()
   const location = useLocation()
   console.log('object')
+  console.log('object')
+  console.log('object')
   // 监听表单提交
   const onFinish = async (values) => {
     try {
