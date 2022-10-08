@@ -15,6 +15,7 @@ export default function Login() {
   console.log('object')
   console.log('object')
   console.log('object2')
+  console.log('object2')
   // 监听表单提交
   const onFinish = async (values) => {
     try {
