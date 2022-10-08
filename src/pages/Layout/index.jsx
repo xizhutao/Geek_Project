@@ -18,6 +18,7 @@ import {
 import { useDispatch, useSelector } from 'react-redux'
 import { useEffect, lazy } from 'react'
 import { getUserInfo, logout } from '@/store/Actions'
+console.log('commit1')
 // 路由懒加载
 const DashBoard = lazy(() => import('../DashBoard'))
 const Publish = lazy(() => import('../Publish'))
