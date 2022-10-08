@@ -1,5 +1,6 @@
 import { Card, Button, Checkbox, Form, Input, message } from 'antd'
 import Logo from '../../assets/logo.png'
+import Logo2 from '../../assets/Icon.png'
 // 导入action
 import { login } from '@/store/Actions'
 import { useDispatch } from 'react-redux'
@@ -9,6 +10,7 @@ export default function Login() {
   const dispatch = useDispatch()
   const history = useHistory()
   const location = useLocation()
+  console.log('object')
   // 监听表单提交
   const onFinish = async (values) => {
     try {
@@ -36,6 +38,7 @@ export default function Login() {
     <div className={styles.root}>
       <Card className="login" bodyStyle={{ padding: 20 }}>
         <img className="logoImg" src={Logo} alt="" />
+        <img className="logoImg2" src={Logo2} alt="" />
         {/* 表单 */}
         <Form
           size="large"
