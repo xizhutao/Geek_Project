@@ -20,6 +20,7 @@ import { useEffect, lazy } from 'react'
 import { getUserInfo, logout } from '@/store/Actions'
 console.log('commit1')
 console.log('commit2')
+console.log('commit3')
 // 路由懒加载
 const DashBoard = lazy(() => import('../DashBoard'))
 const Publish = lazy(() => import('../Publish'))
